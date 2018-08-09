@@ -1,0 +1,620 @@
+<%#
+Copyright 2008-2013 Concur Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may
+not use this file except in compliance with the License. You may obtain
+a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+%>
+<% language_tabs = current_page.data.language_tabs || [] %>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="icon" type="image/png" href="images/alaunus-tiny.png" />
+    <title><%= current_page.data.title || "API Documentation" %></title>
+
+    <style>
+      <%= Rouge::Themes::MonokaiSublime.render(:scope => '.highlight') %>
+    </style>
+    <%= stylesheet_link_tag :screen, media: :screen %>
+    <%= stylesheet_link_tag :print, media: :print %>
+    <% if current_page.data.search %>
+      <%= javascript_include_tag  "all" %>
+    <% else %>
+      <%= javascript_include_tag  "all_nosearch" %>
+    <% end %>
+
+    <script type="text/javascript" url="javascripts/lib/_jquery.js"></script>
+    <script type="text/javascript" url="javascripts/lib/_jquery.tocify.js"></script>
+    <script type="text/javascript" url="javascripts/app/_lang.js"></script>
+    <script type="text/javascript" url="javascripts/app/_toc.js"></script>
+
+    <script type="text/javascript">
+
+      function showHide(id, classe) {
+        var $el = $(id);
+        if ($el.css('display') == 'none') {
+          $el.show();
+
+        } else {
+          $el.hide();
+          $(classe).hide();
+        }
+      }
+
+      function showHides(id, label) {
+        var $el = $(id);
+
+        if ($el.css('display') == 'none') {
+          $el.show();
+          $(label).text("hide");
+
+        } else {
+          $el.hide();
+          $(label).text("show more");
+        }
+      }
+
+    </script>
+  </head>
+
+  <body class="<%= page_classes %>" data-languages="<%=h language_tabs.map{ |lang| lang.is_a?(Hash) ? lang.keys.first : lang }.to_json %>">
+    <a href="#" id="nav-button">
+      <span>
+        NAV
+        <%= image_tag('navbar.png') %>
+      </span>
+    </a>
+    <div class="tocify-wrapper">
+      <%= image_tag "logo.png" %>
+      <% if language_tabs %>
+        <div class="lang-selector">
+          <% language_tabs.each do |lang| %>
+            <% if lang.is_a? Hash %>
+              <a href="#" data-language-name="<%= lang.keys.first %>"><%= lang.values.first %></a>
+            <% else %>
+              <a href="#" data-language-name="<%= lang %>"><%= lang %></a>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+      <% if current_page.data.search %>
+      <% end %>
+      <div id="toc">
+      </div>
+      <% if current_page.data.toc_footers %>
+        <ul class="toc-footer">
+          <% current_page.data.toc_footers.each do |footer| %>
+            <li><%= footer %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+    <div class="page-wrapper">
+      <div class="dark-box"></div>
+      <div class="content">
+        <%= yield %> <!-- read stuff from markdown file -->
+
+        <%= ERB.new(File.read("source/layouts/crud/query.erb")).result(binding) %>
+
+        <% Dir.glob("source/jsonfiles/*.json") do |jsonfilepath| %>  <!-- loop through folder and jsonfilepath = path to each json file -->
+          
+          <% require 'json' %>
+          <% file = File.read(jsonfilepath) %>       <!-- read each json file -->
+          <% my_json_hash = JSON.parse(file) %>      <!-- read each json file -->
+
+          <% jsontitle = jsonfilepath %>      <!-- use the name of the json file as title -->
+          <% jsontitle.slice! "source/jsonfiles/" %>    <!-- use the name of the json file as title -->
+          <% jsontitle.slice! ".json" %>      <!-- use the name of the json file as title -->
+
+          <% if (my_json_hash.key?("attrs")) && (!my_json_hash['documentationhide']) %>      <!-- check if the key 'attrs' exists -->
+            
+            <h1 id="<%= jsontitle %>"><%= jsontitle.capitalize %></h1>    <!-- print title on html -->
+            
+            <% my_json_hash_sorted = my_json_hash['attrs'].sort %>
+
+            <h2 id="<%= jsontitle + '_object' %>">The <%= jsontitle %> object</h2>     <!--  prints each subtitle on the html --> 
+
+            <!-- Information's table -->
+            <% everything = true %>
+
+            <% if everything %>
+            <h3> Attributes: </h3>
+            <div class="div-table">
+              <div class="div-table-row head-row">
+                  <div class="div-table-col attribute" style="color:black;"><b><u>Attribute</u></b></div>
+                  <div class="div-table-col description" style="color:black;"><b><u>Description</u></b></div>
+              </div>
+
+              <div id="<%= jsontitle %>-table">
+                <% my_json_hash_sorted.each do |a| %>       <!-- loop through each section inside the attrs key on the json file -->
+                <% if (my_json_hash['attrs'][a[0]]['documentation'].key?("hide")) && (!my_json_hash['attrs'][a[0]]['documentation']['hide']) %>
+
+                  <div class="div-table-row">
+                      <div class="div-table-col attribute">
+                        <a class="showhideclick" href="#" onclick="showHide('.<%= jsontitle %>-sub-<%= a[0] %>', '.a-<%= a[0] %>'); return false;">
+                          <%= a[0]%></a>
+                        <% if (a[1].key?("type")) %>
+                          <br><a class="typegrey"><%= a[1]['type'] %></a>
+                        <% end %>
+
+                      </div>
+                      <div class="div-table-col description">
+                        <%= a[1]['documentation']['description'] %>
+                      </div>
+                  </div>
+
+                  <% if (a[1]['type']!='subdocuments') && (a[1]['type']!='subdocument') %>
+
+                    <% a[1].each do |b| %>
+                    <% if b[0] != 'documentation' %>
+
+                      <%= ERB.new(File.read("source/layouts/crud/object/first.erb")).result(binding) %>
+
+                      <% if (b[1].is_a?(Hash)) %>
+                      
+                        <% if (b[1]['type']!='subdocuments') && (b[1]['type']!='subdocument') %>
+
+                          <% b[1].each do |c| %>
+                          <% if c[0] != 'documentation' %>
+
+                            <%= ERB.new(File.read("source/layouts/crud/object/second.erb")).result(binding) %>
+                            
+                            <% if (c[1].is_a?(Hash)) %> 
+
+                              <% if (c[1]['type']!='subdocuments') && (c[1]['type']!='subdocument') %>
+
+                                <% c[1].each do |d| %>
+                                <% if d[0] != 'documentation' %>
+
+                                  <%= ERB.new(File.read("source/layouts/crud/object/third.erb")).result(binding) %>
+                                  
+                                  <% if (d[1].is_a?(Hash)) %> 
+                                  
+                                    <% if (d[1]['type']!='subdocuments') && (d[1]['type']!='subdocument') %>
+
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+                                      <% end %>
+                                      <% end %>
+
+                                    <% else %>
+                                      <% d[1] = d[1]['subdocument'] %>
+                                      
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+                                      <% end %>
+                                      <% end %>
+
+                                    <% end %>
+
+                                  <% end %>
+                                  <!-- end d loop -->
+
+                                <% end %>
+                                <% end %>
+                                        <!-- end c loop -->
+                              <% else %>
+
+                                <% c[1] = c[1]['subdocument'] %>
+                                
+                                <% c[1].each do |d| %>
+                                <% if d[0] != 'documentation' %>
+
+                                  <%= ERB.new(File.read("source/layouts/crud/object/third.erb")).result(binding) %>
+                                  
+                                  <% if (d[1].is_a?(Hash)) %> 
+                                  
+                                    <% if (d[1]['type']!='subdocuments') && (d[1]['type']!='subdocument') %>
+
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+
+                                      <% end %>
+                                      <% end %>
+
+                                    <% else %>
+
+                                      <% d[1] = d[1]['subdocument'] %>
+                                      
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+
+                                      <% end %>
+                                      <% end %>
+
+                                    <% end %>
+                                  <% end %>
+                                  <!-- end d loop -->
+
+                                <% end %>
+                                <% end %>
+                                <!-- end c loop -->
+
+                              <% end %>
+                            <% end %>
+
+                          <% end %>
+                          <% end %>
+                          <!-- end b loop when it is not subdocument-->
+
+                        <% else %>
+                          <% b[1] = b[1]['subdocument'] %>
+
+                          <% b[1].each do |c| %>
+                          <% if c[0] != 'documentation' %>
+
+                            <%= ERB.new(File.read("source/layouts/crud/object/second.erb")).result(binding) %>
+                            
+                            <% if (c[1].is_a?(Hash)) %> 
+
+                              <% if (c[1]['type']!='subdocuments') && (c[1]['type']!='subdocument') %>
+
+                                <% c[1].each do |d| %>
+                                <% if d[0] != 'documentation' %>
+
+                                  <%= ERB.new(File.read("source/layouts/crud/object/third.erb")).result(binding) %>
+                                  
+                                  <% if (d[1].is_a?(Hash)) %> 
+                                  
+                                    <% if (d[1]['type']!='subdocuments') && (d[1]['type']!='subdocument') %>
+
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+                                        
+                                      <% end %>
+                                      <% end %>
+                                    <% else %>
+                                      <% d[1] = d[1]['subdocument'] %>
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+
+                                      <% end %>
+                                      <% end %>
+                                    <% end %>
+                                  <% end %>
+                                  <!-- end d loop -->
+
+                                <% end %>
+                                <% end %>
+                                <!-- end c loop -->
+                              <% else %>
+                                <% c[1] = c[1]['subdocument'] %>
+                                
+                                <% c[1].each do |d| %>
+                                <% if d[0] != 'documentation' %>
+
+                                  <%= ERB.new(File.read("source/layouts/crud/object/third.erb")).result(binding) %>
+                                  
+                                  <% if (d[1].is_a?(Hash)) %> 
+                                  
+                                    <% if (d[1]['type']!='subdocuments') && (d[1]['type']!='subdocument') %>
+
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+                                        
+                                      <% end %>
+                                      <% end %>
+                                    <% else %>
+                                      <% d[1] = d[1]['subdocument'] %>
+                                      
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+
+                                      <% end %>
+                                      <% end %>
+                                    <% end %>
+                                  <% end %>
+                                  <!-- end d loop -->
+
+                                <% end %>
+                                <% end %>
+                                <!-- end c loop -->
+
+                              <% end %>
+                            <% end %>
+
+                          <% end %>
+                          <% end %>
+                          <!-- end b loop when it is not subdocument-->
+
+                        <% end %>
+                      
+                      <% end %>
+                      <!-- end check if b is a hash -->
+
+                    <% end %>
+                    <% end %>
+                    <!-- end a loop -->
+
+                  <% else %>
+                    <% a[1] = a[1]['subdocument'] %>
+
+                    <% a[1].each do |b| %>
+                    <% if b[0] != 'documentation' %>
+
+                      <%= ERB.new(File.read("source/layouts/crud/object/first.erb")).result(binding) %>
+
+                      <% if (b[1].is_a?(Hash)) %>
+                      
+                        <% if (b[1]['type']!='subdocuments') && (b[1]['type']!='subdocument') %>
+
+                          <% b[1].each do |c| %>
+                          <% if c[0] != 'documentation' %>
+
+                            <%= ERB.new(File.read("source/layouts/crud/object/second.erb")).result(binding) %>
+                            
+                            <% if (c[1].is_a?(Hash)) %> 
+
+                              <% if (c[1]['type']!='subdocuments') && (c[1]['type']!='subdocument') %>
+
+                                <% c[1].each do |d| %>
+                                <% if d[0] != 'documentation' %>
+
+                                  <%= ERB.new(File.read("source/layouts/crud/object/third.erb")).result(binding) %>
+
+                                  <% if (d[1].is_a?(Hash)) %> 
+                                  
+                                    <% if (d[1]['type']!='subdocuments') && (d[1]['type']!='subdocument') %>
+
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+
+                                      <% end %>
+                                      <% end %>
+                                    <% else %>
+                                      <% d[1] = d[1]['subdocument'] %>
+                                      
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+                                        
+                                      <% end %>
+                                      <% end %>
+                                    <% end %>
+                                  <% end %>
+                                  <!-- end d loop -->
+
+                                <% end %>
+                                <% end %>
+                                <!-- end c loop -->
+                              <% else %>
+                                <% c[1] = c[1]['subdocument'] %>
+                                
+                                <% c[1].each do |d| %>
+                                <% if d[0] != 'documentation' %>
+
+                                  <%= ERB.new(File.read("source/layouts/crud/object/third.erb")).result(binding) %>
+                                  
+
+                                  <% if (d[1].is_a?(Hash)) %> 
+                                  
+                                    <% if (d[1]['type']!='subdocuments') && (d[1]['type']!='subdocument') %>
+
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+
+                                      <% end %>
+                                      <% end %>
+                                    <% else %>
+                                      <% d[1] = d[1]['subdocument'] %>
+                                      
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+
+                                      <% end %>
+                                      <% end %>
+                                    <% end %>
+                                  <% end %>
+                                  <!-- end d loop -->
+
+                                <% end %>
+                                <% end %>
+                                <!-- end c loop -->
+
+                              <% end %>
+                            <% end %>
+
+                          <% end %>
+                          <% end %>
+                          <!-- end b loop when it is not subdocument-->
+
+                        <% else %>
+                          <% b[1] = b[1]['subdocument'] %>
+
+                          <% b[1].each do |c| %>
+                          <% if c[0] != 'documentation' %>
+
+                            <%= ERB.new(File.read("source/layouts/crud/object/second.erb")).result(binding) %>
+                            
+
+                            <% if (c[1].is_a?(Hash)) %> 
+
+                              <% if (c[1]['type']!='subdocuments') && (c[1]['type']!='subdocument') %>
+
+                                <% c[1].each do |d| %>
+                                <% if d[0] != 'documentation' %>
+
+                                  <%= ERB.new(File.read("source/layouts/crud/object/third.erb")).result(binding) %>
+                                  
+
+                                  <% if (d[1].is_a?(Hash)) %> 
+                                  
+                                    <% if (d[1]['type']!='subdocuments') && (d[1]['type']!='subdocument') %>
+
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+
+                                      <% end %>
+                                      <% end %>
+                                    <% else %>
+                                      <% d[1] = d[1]['subdocument'] %>
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+
+                                      <% end %>
+                                      <% end %>
+                                    <% end %>
+                                  <% end %>
+                                  <!-- end d loop -->
+
+                                <% end %>
+                                <% end %>
+                                <!-- end c loop -->
+                              <% else %>
+                                <% c[1] = c[1]['subdocument'] %>
+                                
+                                <% c[1].each do |d| %>
+                                <% if d[0] != 'documentation' %>
+
+                                  <%= ERB.new(File.read("source/layouts/crud/object/third.erb")).result(binding) %>
+                                  
+                                  <% if (d[1].is_a?(Hash)) %> 
+                                  
+                                    <% if (d[1]['type']!='subdocuments') && (d[1]['type']!='subdocument') %>
+
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+                                        
+                                      <% end %>
+                                      <% end %>
+                                    <% else %>
+                                      <% d[1] = d[1]['subdocument'] %>
+                                      
+                                      <% d[1].each do |e| %>
+                                      <% if e[0] != 'documentation' %>
+
+                                        <%= ERB.new(File.read("source/layouts/crud/object/fourth.erb")).result(binding) %>
+                                        
+                                      <% end %>
+                                      <% end %>
+                                    <% end %>
+                                  <% end %>
+                                  <!-- end d loop -->
+
+                                <% end %>
+                                <% end %>
+                                <!-- end c loop -->
+
+
+                              <% end %>
+                            <% end %>
+
+                          <% end %>
+                          <% end %>
+                          <!-- end b loop when it is not subdocument-->
+
+                        <% end %>
+                      
+                      <% end %>
+                      <!-- end check if b is a hash -->
+
+                    <% end %>
+                    <% end %>
+                    <!-- end a loop -->
+
+                  <% end %>
+
+                <% end %>
+                <% end %>
+                <!-- end collection loop -->
+
+              </div>
+            </div>
+            <% end %>
+
+            <!-- end collection table -->
+
+            <% examples = false %>
+
+            <!-- Code for printing code examples and language -->
+            <% if examples == true %>
+
+              <% my_json_hash['codes'].each do |langs| %>     <!-- loop through all the different codes on the json file --> 
+                <% entirecode = '' %> 
+                <% if (langs[0] == 'shell') %>       
+                  <% langs[1].each do |lines| %>        <!-- loop through each line of each code -->
+                    <% entirecode = entirecode + lines[1] + "\n" %>    <!-- put all the lines together -->
+                  <% end %>
+                  <% highlightedcode = Rouge.highlight(entirecode, langs[0], 'html') %>     <!-- pretty colors -->
+                  <% highlightedcode.gsub! '<pre class="highlight"', '<pre class="highlight' + ' ' + langs[0] + '"' %>   <!-- makes so each language block of code has its own subclass -->
+                  <%= highlightedcode %>
+                <% end %>
+              <% end %>
+            <% end %>
+
+            <!-- Code for printing json examples -->
+            <% if (my_json_hash.key?("examples")) %>
+              <% example = my_json_hash["examples"]["example1"] %>
+              <% my_json_hash_pretty = JSON.pretty_generate(example) %>    <!-- sit still, look pretty; the except is used so the description doesnt show on the json code block -->
+              <%= Rouge.highlight(my_json_hash_pretty, 'json', 'html') %>   <!-- pretty colors -->
+            <% end %>
+
+            <!-- Submenus -->
+            <% if (my_json_hash.key?("actions")) %>
+              <% my_json_hash['actions'].each do |action| %>     <!-- loop through all the different codes on the json file --> 
+
+              <%= ERB.new(File.read("source/layouts/" + action[1])).result(binding) %>
+            
+              <% end %>
+            <% end %>            
+          <% end %>
+          <!-- end show collection -->
+        
+        <% end %>
+        <!-- end all collections (.json) loop -->
+
+      </div>     <!-- closes class="content" -->
+      <div class="dark-box">
+        <% if language_tabs %>
+          <div class="lang-selector">
+            <% language_tabs.each do |lang| %>
+              <% if lang.is_a? Hash %>
+                <a href="#" data-language-name="<%= lang.keys.first %>"><%= lang.values.first %></a>
+              <% else %>
+                <a href="#" data-language-name="<%= lang %>"><%= lang %></a>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </body>
+</html>

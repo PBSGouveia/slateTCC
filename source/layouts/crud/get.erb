@@ -1,0 +1,134 @@
+	<h2 id="<%= jsontitle + '_get' %>">Get <%= jsontitle.chomp('s') %></h2>     <!--  prints each subtitle on the html --> 
+
+    <p>Gets the details of an existing <%=jsontitle.chomp('s')%>. Supply the unique 
+    <%=jsontitle.chomp('s')%> ID from either a <%=jsontitle.chomp('s')%> creation request or the <%=jsontitle.chomp('s')%> 
+    list, and Alaunus will return the corresponding <%=jsontitle.chomp('s')%> information.</p>     <!-- display the description --> 
+
+    <div class="div-table">
+      <div class="div-table-row head-row">
+          <div class="div-table-col attribute" style="color:black;"><b><u>Argument</u></b></div>
+          <div class="div-table-col description" style="color:black;"><b><u>Description</u></b></div>
+      </div>
+
+      <div id="<%= jsontitle %>-table">
+        <%# my_json_hash_sorted.each do |a| %>       <!-- loop through each section inside the attrs key on the json file -->
+        <%# if (my_json_hash['attrs'][a[0]]['documentation'].key?("hide")) && (!my_json_hash['attrs'][a[0]]['documentation']['hide']) %>
+
+          <div class="div-table-row">
+              <div class="div-table-col attribute">
+                <b>objects</b>
+                <br>
+                <a class="typegrey">true, false, "primary", "secondary"</a>
+              </div>
+              <div class="div-table-col description">
+                returns documents and/or subdocuments as objects or arrays
+                <br>
+                <ul>
+                  <li>true returns objects</li>
+                  <li>false returns arrays</li>
+                  <li>primary returns documents as objects and subdocuments as arrays</li>
+                  <li>secondary returns documents in an array and subdocuments as objects</li>
+                </ul>
+              </div>
+          </div>
+
+          <div class="div-table-row">
+              <div class="div-table-col attribute">
+                <b>archived</b>
+                <br>
+                <a class="typegrey">true, false, "primary", "secondary"</a>
+              </div>
+              <div class="div-table-col description">
+                enables returning archived documents and subdocuments (i.e. the field _deleted is true)
+                <br>
+                <ul>
+                  <li>true returns all archived and unarchived documents and subdocuments</li>
+                  <li>false prevents all archived documents/subdocuments from being returned</li>
+                  <li>primary returns all archived and unarchived documents and only unarchived subdocuments</li>
+                  <li>secondary returns only unarchived documents and all archived and unarchived subdocuments for those documents</li>
+                </ul>
+              </div>
+          </div>
+
+          <div class="div-table-row">
+              <div class="div-table-col attribute">
+                <b>primary</b>
+                <br>
+                <a class="typegrey">true, false</a>
+              </div>
+              <div class="div-table-col description">
+                this function is currently broken
+              </div>
+          </div>
+
+          <div class="div-table-row">
+              <div class="div-table-col attribute">
+                <b>fields</b>
+                <br>
+                <a class="typegrey">comma separated fields</a>
+              </div>
+              <div class="div-table-col description">
+                the document returns with only the specified fields; if no fields are specified, then all fields are returned
+                <br>
+                <ul>
+                  <li>note that fields within subdocument(s) can be specified using dot notation</li>
+                  <li>example: locations.address.city</li>
+                  <li>there are some fields that are always returned whether they're specified or not:
+                    <ul>
+                      <li>_id</li>
+                      <li>subdocuments._id</li>
+                      <li>subdocuments._key</li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+          </div>
+
+          <div class="div-table-row">
+              <div class="div-table-col attribute">
+                <b>files</b>
+                <br>
+                <a class="typegrey">comma separated fields</a>
+              </div>
+              <div class="div-table-col description">
+                embeds a file subdocument in the specified file-type fields
+              </div>
+          </div>
+
+          <div class="div-table-row">
+              <div class="div-table-col attribute">
+                <b>embeds</b>
+                <br>
+                <a class="typegrey">array({"collection":collection, "function":value})</a>
+              </div>
+              <div class="div-table-col description">
+                embeds within the returned document content from a document of a different (or the same) collection
+                <br>
+                <ul>
+                  <li>you can specify zero or more of the following functions to execute on the embedded document:
+                  <ul>
+                      <li>objects, archived, primary, fields, embeds</li>
+                      <li>within an embed, the archived function defaults its value to true and its value primary is disabled</li>
+                      <li>the primary function is currently broken</li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+          </div>
+
+          <div class="div-table-row">
+              <div class="div-table-col attribute">
+                <b>query</b>
+                <br>
+                <a class="typegrey">{comma separated queries}</a>
+              </div>
+              <div class="div-table-col description">
+                Click <a href='http://localhost:4567/?shell#query'>here</a> to be redirected for the query information
+              </div>
+          </div>
+
+
+        <%# end %>
+        <%# end %>
+      </div>
+    </div>
